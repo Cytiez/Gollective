@@ -29,7 +29,7 @@ SECRET_KEY = 'django-insecure-jf_l#ahbupkwrq^juv^d&%a@u#)tqd3u*a3k9hx_7m(*(6)6q+
 PRODUCTION = os.getenv('PRODUCTION', 'False').lower() == 'true'
 DEBUG = True
 
-ALLOWED_HOSTS = ["localhost", "127.0.0.1", "raqilla-alabrar-Gollective.pbp.cs.ui.ac.id"]
+ALLOWED_HOSTS = ["localhost", "127.0.0.1", "raqilla-alabrar-gollective.pbp.cs.ui.ac.id"]
 
 
 # Application definition
