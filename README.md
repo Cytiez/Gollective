@@ -30,7 +30,7 @@ Step by step implementasi checklist:
        Setelah melakukan semua pembuatan diatas saya melakukan testing pada lokal server terlebih dahulu untuk cek apakah ada kesalahan menggunakan python manage.py runserver. Lalu jika tidak terjadi kesalahn baru saya deploy ke pws.
 
 Bagan request client ke web aplikasi berbasis Django:
-    ![Bagan request](/Users/macbookpro/Desktop/SEMESTER 3/PBP/Gollective/urls.py.png)
+    <img width="1920" height="1080" alt="Image" src="https://github.com/user-attachments/assets/70602f2c-3dfc-4eae-8031-23e5531478a6" />
     1. Client
         User membuka url di browser. Request dari client tersebut akan dikirim ke server Django
     2. urls.py (Project -> app)
