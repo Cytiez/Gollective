@@ -94,4 +94,11 @@ Implementasi checklist
     6. Testing lokal dan deploy pws
         Menjalankan server lokal dengan python manage.py runserver untuk cek error.
         Push ke GitHub dan PWS, lalu cek di URL deployment.
+Feedback: Gacor bang Fahri
+screenshot:
+    ![screenshot postman xml](assets/xml.png)
+    ![screenshot postman xml by id](assets/xml_by_id.png)
+    ![screenshot postman josn](assets/json.png)
+    ![screenshot postman josn by id](assets/json_by_id.png)
+
 
