@@ -4,6 +4,7 @@ Kelas: A
 
 Link PWS: https://raqilla-alabrar-gollective.pbp.cs.ui.ac.id/
 
+##TUGAS1##
 Step by step implementasi checklist:
     1. Inisiasi pembuatan projek Django
        Membuat project baru bernama 'gollective' menggunakan 'django-admin startproject gollective .'
@@ -64,3 +65,33 @@ Django dipilih sebagai framework awal karena beberapa alasan berikut:
     3. Dokumentasi Django sudah sangat baik sehingga memudahkan mahasiswa untuk belajar mandiri
 
 Feedback: Sejauh ini sudah sangat baik, asdosnya juga keren banget, sangat amat membantu.
+
+##TUGAS2##
+Mengapa perlu data delivery?
+    Data delivery dibutuhkan supaya aplikasi bisa saling bertukar data, baik antar sistem maupun antar platform. Misalnya backend Django bisa memberikan data JSON ke aplikasi mobile, atau menyediakan XML untuk integrasi dengan sistem lain. Tanpa data delivery, aplikasi hanya bisa menampilkan HTML ke user dan sulit diintegrasikan.
+Mana yang lebih baik JSON atau XML? Kenapa JSON lebih populer
+    Secara umum JSON lebih baik untuk kebutuhan modern karena lebih ringan, mudah dibaca manusia, dan lebih efisien diproses komputer. XML cenderung verbose dengan banyak tag pembuka/penutup. JSON lebih populer karena sudah jadi standar di web API, didukung langsung oleh JavaScript, dan lebih gampang diolah di berbagai bahasa pemrograman.
+Method is_valid()
+    is_valid() digunakan untuk memeriksa apakah data yang di-submit melalui form sudah sesuai dengan aturan model dan field validasi. Method ini juga otomatis membersihkan data (cleaned_data). Kita butuh ini supaya data yang masuk ke database tidak rusak atau tidak sesuai format.
+Kenapa butuh csrf_token untuk bikin form? Bahaya jika tidak menggunakan, bagaimana penyerang dapat memanfaatkannya?
+    csrf_token mencegah serangan CSRF (Cross-Site Request Forgery), yaitu serangan di mana attacker membuat user tanpa sadar mengirim request berbahaya. Kalau token ini tidak ada, attacker bisa memanfaatkan session user yang sedang login untuk melakukan aksi seperti mengubah data atau mengirim form tanpa izin.
+Implementasi checklist
+    1. Tambah view data delivery
+        Pada views.py ditambahkan fungsi show_xml, show_json, show_xml_by_id, dan show_json_by_id untuk mengembalikan data produk dalam format XML/JSON.
+        Menggunakan serializers.serialize() dari Django untuk mengubah queryset menjadi XML/JSON.
+    2. Routing URL
+        Di main/urls.py ditambahkan path untuk masing-masing fungsi: /xml/, /json/, /xml/<id>/, /json/<id>/.
+    3. Buat halaman utama dengan tombol add
+        Pada main.html ditambahkan tombol Add Product untuk redirect ke form input.
+        Data produk ditampilkan dalam bentuk list, setiap produk punya tombol Detail untuk melihat detail produk.
+    4. Form input produk
+        Membuat forms.py dengan ProductForm berbasis ModelForm.
+        Membuat view add_product yang menampilkan form dan menyimpan data baru ketika di-submit.
+        Template add_product.html berisi form dengan {% csrf_token %} untuk keamanan.
+    5. Halaman detail produk
+        Membuat view show_product yang menampilkan detail produk berdasarkan id.
+        Template product_detail.html menampilkan informasi lengkap produk.
+    6. Testing lokal dan deploy pws
+        Menjalankan server lokal dengan python manage.py runserver untuk cek error.
+        Push ke GitHub dan PWS, lalu cek di URL deployment.
+
