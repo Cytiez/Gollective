@@ -1,4 +1,5 @@
 from django.db import models
+from django.contrib.auth.models import User
 
 class Product(models.Model):
     CATEGORY_CHOICES = [
@@ -20,6 +21,7 @@ class Product(models.Model):
     release_year = models.IntegerField(blank=True, null=True)
     condition = models.CharField(max_length=50, default="Mint")
     authenticity = models.BooleanField(default=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True)
 
     def __str__(self):
         return f"{self.club_name} {self.season} - {self.name}"
