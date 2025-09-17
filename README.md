@@ -4,7 +4,7 @@ Kelas: A
 
 Link PWS: https://raqilla-alabrar-gollective.pbp.cs.ui.ac.id/
 
-##TUGAS1##
+##TUGAS2##
 Step by step implementasi checklist:
     1. Inisiasi pembuatan projek Django
        Membuat project baru bernama 'gollective' menggunakan 'django-admin startproject gollective .'
@@ -66,7 +66,7 @@ Django dipilih sebagai framework awal karena beberapa alasan berikut:
 
 Feedback: Sejauh ini sudah sangat baik, asdosnya juga keren banget, sangat amat membantu.
 
-##TUGAS2##
+##TUGAS3##
 Mengapa perlu data delivery?
     Data delivery dibutuhkan supaya aplikasi bisa saling bertukar data, baik antar sistem maupun antar platform. Misalnya backend Django bisa memberikan data JSON ke aplikasi mobile, atau menyediakan XML untuk integrasi dengan sistem lain. Tanpa data delivery, aplikasi hanya bisa menampilkan HTML ke user dan sulit diintegrasikan.
 Mana yang lebih baik JSON atau XML? Kenapa JSON lebih populer
@@ -101,4 +101,80 @@ screenshot:
     ![screenshot postman josn](assets/json.png)
     ![screenshot postman josn by id](assets/json_by_id.png)
 
+##TUGAS4##
+Apa itu Django AuthenticationForm?
+    AuthenticationForm adalah salah satu bentuk form bawaan dari Django yang digunakan untuk auntentikasi pengguna berasarkan username dan password. Form ini otomatis melakukan validasi apakah user terdaftar di database dan apakah password yang diberikan cocok.
+    Kelebihan:
+        - Built-in dan plug and play
+        - Sudah aman, password sudah diverifikasi menggunakan hashing bawaan Django
+    Kekurangan:
+        - Hanya menyediakan field standar
+        - Tidak bisa langsung dikustomisasi untuk tambahan field seperti email
 
+Perbedaan antara autentikasi dan otorisasi
+    - Autentikasi: proses memastikan identitas penggua. Contoh: saat login dengan username dan password.
+    - Otorisasi: Proses memastikan apa saja yang boleh dilakukan oleh pengguna. Contoh: hanya admin     yang boleh hapus data
+    Implementasi autentikasi pada Django disediakan dengan menggunakan authenticate(), login(), logout(), dan model user. Sedangkan otorisasi diimplementasikan dengan decorator @login_required untuk membatasi akses halaman, @permission_required untuk hak akses tertentu, dan is_staff/is_superuser untuk admin.
+
+Kelebihan dan kekurangan Session dan Cookies
+    Cookies:
+        Kelebihan:
+        - Disimpan di browser cocok untuk menyimpan data ringan seperti preferensi user atau session id.
+        - Bertahan antar request (bisa diatur masa berlaku).
+        Kekurangan:
+        - Ukuran terbatas (maks ~4 KB).
+        - Bisa diakses/dimodifikasi user, sehingga rawan security issue kalau menyimpan data sensitif.
+    Session:
+        Kelebihan:
+        - Data disimpan di server (lebih aman).
+        - Bisa menyimpan data lebih banyak & kompleks dibanding cookie.
+        - Terintegrasi dengan sistem auth Django.
+        Kekurangan:
+        - Membutuhkan resource server untuk menyimpan session.
+        - Harus ada cookie sessionid di sisi client agar session bisa dikenali.
+
+Apakah Cookies aman?
+    Secara default cookies bisa jadi tidak aman karena:
+    - Bisa di-sniff jika tidak dienkripsi (misalnya tanpa HTTPS).
+    - Bisa dimodifikasi di sisi client.
+    - Bisa jadi target serangan CSRF atau XSS.
+
+    Cara Django menanganinya:
+    - csrf_token → mencegah CSRF attack saat submit form.
+    - SESSION_COOKIE_SECURE = True → pastikan cookie hanya dikirim via HTTPS.
+    - SESSION_COOKIE_HTTPONLY = True → cookie tidak bisa diakses JavaScript.
+    - SESSION_COOKIE_SAMESITE = 'Lax' (atau Strict) → mencegah cross-site request yang berbahaya.
+
+Step by step implementasi checklist:
+    1. Membuat sistem register, login, logout
+        Tambahkan fungsi register, login_user, dan logout_user di views.py.
+        Buat template register.html & login.html untuk form.
+        Update urls.py untuk menambahkan path register/login/logout.
+    2. Membuat akun dummy
+        Jalankan python manage.py shell.
+        Gunakan User.objects.create_user(username, password) untuk membuat dua akun (misalnya rio dan dina).
+    3. Menambahkan 3 dummy product per akun
+        Masih di shell, buat 3 objek Product untuk tiap user dengan field lengkap (name, club, season, price, dll).
+    4. Menghubungkan model Product dengan user
+        Tambahkan field user = models.ForeignKey(User, on_delete=models.CASCADE, null=True) pada Product.
+        Jalankan makemigrations & migrate.
+        Update add_product di views.py agar product.user = request.user sebelum save().
+    5. Menampilkan informasi user & cookies last_login
+        Di login_user, tambahkan:
+        resp = HttpResponseRedirect(reverse("main:show_main"))
+        resp.set_cookie('last_login', str(datetime.datetime.now()))
+        Di logout_user, tambahkan response.delete_cookie('last_login').
+        Di show_main, tambahkan context user = request.user.username & last_login = request.COOKIES.get('last_login', 'Never').
+        Tampilkan di main.html:
+        <h3>User: {{user}}</h3>
+        <h5>Sesi terakhir login: {{ last_login }}</h5>
+    6. Filter All/My Product
+        Tambahkan query param filter=my untuk menampilkan produk milik user login.
+        Tambahkan tombol di main.html:
+        <a href="?filter=all"><button>All Products</button></a>
+        <a href="?filter=my"><button>My Products</button></a>
+    7. Testing, deploy
+        Terakhir saya melakukan testing di lokal terlebih dahulu, jika tidak ada masalah deploy ke pws.
+
+Feedback Asdos
+    Bang fahri gokil
