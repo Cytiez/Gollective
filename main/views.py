@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseForbidden
 from django.core import serializers
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib import messages
@@ -24,9 +24,6 @@ def show_main(request):
         products = Product.objects.filter(user=request.user)
         
     context = {
-        "npm": "2406496025",
-        "name": "Raqilla Al-Abrar",
-        "class": "PBP A",
         "products": products,
         'last_login': request.COOKIES.get('last_login', 'Never'),
         'user': request.user.username,
@@ -106,3 +103,25 @@ def logout_user(request):
     response = HttpResponseRedirect(reverse('main:login'))
     response.delete_cookie('last_login')
     return response
+
+@login_required(login_url='/login/')
+def edit_product(request, id):
+    product = get_object_or_404(Product, pk=id)
+    if product.user != request.user:
+        return HttpResponseForbidden("You are not allowed to edit this item.")
+
+    form = ProductForm(request.POST or None, instance=product)
+    if form.is_valid() and request.method == 'POST':
+        form.save()
+        return redirect('main:show_main')
+
+    return render(request, 'edit_product.html', {'form': form, 'product': product})
+
+@login_required(login_url='/login/')
+def delete_product(request, id):
+    product = get_object_or_404(Product, pk=id)
+    if product.user != request.user:
+        return HttpResponseForbidden("You are not allowed to delete this item.")
+
+    product.delete()
+    return HttpResponseRedirect(reverse('main:show_main'))

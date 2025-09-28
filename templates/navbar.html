@@ -1,0 +1,49 @@
+<nav class="sticky top-0 z-40 bg-white/90 backdrop-blur border-b border-gray-200">
+  <div class="mx-auto max-w-6xl px-4 py-3 flex items-center justify-between">
+    <a href="/" class="flex items-center gap-2 font-semibold text-gray-900">
+      <span class="inline-grid place-items-center w-8 h-8 rounded-xl bg-gray-900 text-white">G</span>
+      <span>Gollective</span>
+    </a>
+
+    <button class="md:hidden p-2" id="menuBtn" aria-label="Open menu">
+      <div class="w-6 h-6 flex flex-col justify-center">
+        <span class="h-0.5 w-6 bg-gray-800 mb-1"></span>
+        <span class="h-0.5 w-6 bg-gray-800 mb-1"></span>
+        <span class="h-0.5 w-6 bg-gray-800"></span>
+      </div>
+    </button>
+
+    <div class="hidden md:flex items-center gap-3 text-sm" id="menu">
+      <a class="px-3 py-2 rounded-lg hover:bg-gray-100" href="{% url 'main:show_main' %}">Home</a>
+      <a class="px-3 py-2 rounded-lg hover:bg-gray-100" href="{% url 'main:add_product' %}">Add Product</a>
+      {% if user.is_authenticated %}
+        <span class="text-gray-500">Hi, <b>{{ user.username }}</b></span>
+        <a class="px-3 py-2 rounded-lg hover:bg-gray-100 text-red-600" href="{% url 'main:logout' %}">Logout</a>
+      {% else %}
+        <a class="px-3 py-2 rounded-lg hover:bg-gray-100" href="{% url 'main:login' %}">Login</a>
+        <a class="px-3 py-2 rounded-lg hover:bg-gray-100" href="{% url 'main:register' %}">Register</a>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- mobile menu -->
+  <div class="md:hidden hidden border-t border-gray-200" id="mobileMenu">
+    <div class="px-4 py-3 flex flex-col gap-2 text-sm">
+      <a class="px-3 py-2 rounded-lg hover:bg-gray-100" href="{% url 'main:show_main' %}">Home</a>
+      <a class="px-3 py-2 rounded-lg hover:bg-gray-100" href="{% url 'main:add_product' %}">Add Product</a>
+      {% if user.is_authenticated %}
+        <span class="px-3 py-2 text-gray-500">Hi, <b>{{ user.username }}</b></span>
+        <a class="px-3 py-2 rounded-lg hover:bg-gray-100 text-red-600" href="{% url 'main:logout' %}">Logout</a>
+      {% else %}
+        <a class="px-3 py-2 rounded-lg hover:bg-gray-100" href="{% url 'main:login' %}">Login</a>
+        <a class="px-3 py-2 rounded-lg hover:bg-gray-100" href="{% url 'main:register' %}">Register</a>
+      {% endif %}
+    </div>
+  </div>
+
+  <script>
+    const btn = document.getElementById('menuBtn');
+    const mobile = document.getElementById('mobileMenu');
+    btn.addEventListener('click', () => mobile.classList.toggle('hidden'));
+  </script>
+</nav>

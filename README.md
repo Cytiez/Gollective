@@ -178,3 +178,53 @@ Step by step implementasi checklist:
 
 Feedback Asdos
     Bang fahri gokil
+
+##TUGAS5##
+Urutan Prioritas CSS Selector
+    1. Inline style, langsung di elemen HTML memiliki prioritas tertinggi.
+    2. ID selector, contoh #header{}
+    3. Class, attribute, dan pseudo-class selector, contoh .bottun{}, [type = "text"], :hover.
+    4. Element selector dan pseudo - element, contoh div{}, p:: before.
+    5. Browser default style.
+    Jika dua selector punya tingkat prioritas yang sama, maka yang ditulis paling akhir di CSS yang akan dipakai.
+
+Mengapa resposive design penting dalam pengembangan aplikasi
+    Responsive design penting supaya tampilan web bisa menyesuaikan perangkat yang digunakan oleh user (desktop, tablet, mobile). Dengan begitu:
+        User experience jadi lebih baik, karena tampilan tetap nyaman dilihat di layar kecil maupun besar.
+        Aksesbilitas meningkat, semua orang bisa menggunakan aplikasi tanpa harus zoom in/out.
+        Efisiensi, karena cukup satu codebase untuk berbagai device.
+    Contoh aplikasi
+        Sudah responsive: Instagram web, Shopee
+        Belum responsive: Craiglist(desktop) cenderung mempertahankan layout dekstop klasik.
+
+Perbedaan antara margin, border, dan padding, serta cara implementasinya
+    Margin: jarak luar elemen terhadap elemen lain. Contoh: margin 20px;
+    Border: garis tepi elemen
+    Contoh: border: 2px solid black;
+    Padding: jarak dalam antara isi konten dengan border.
+    Contoh: padding: 10px;
+
+Jelaskan perbedaan flexbox dan grid layout berserta kegunaannya
+    Flexbox: digunakan untuk mengatur elemen dalam satu dimensi (baris atau kolom). Berguna untuk align item ke tengah, membuat layout horizontal atau vertical dinamis.
+    Contoh: display: fleax; justify-content: center; align-items: center;
+    Grid layout: digunakan untuk mengatur elemen dallam dua dimensi (baris dan kolom). Cocok untuk layout kompleks seperti dashboard.
+    Contoh: display: grid; grid-template-columns: repeat(3, lfr)
+
+Step by step implementasi checkpoint
+    1. Implementasi edit dan delete product
+        Tambah fungsi edit_product dan delete_product di views.py. Lalu menambahkan path di main/urls.py. Setelah itu membuat template edit_product.html dengan form update. Tombol edit dan Delete hanya akan muncul jika product.user == request.user.
+    2. Custom styling dengan tailwind
+        Tambahkan <script src="https://cdn.tailwindcss.com"></script> di base.html.
+        Buat static/css/global.css untuk style tambahan (form-style, checkbox, dsb).
+        Update semua halaman (login.html, register.html, add_product.html, edit_product.html, product_detail.html, main.html) pakai class Tailwind.
+    3. Halaman daftar produk dengan card & empty state
+        ika product_list kosong, tampilkan gambar product-not-found.png di static/image/ + pesan belum ada product.
+        Jika ada data, looping product pakai template card_product.html (berisi thumbnail, nama, deskripsi, tombol edit & delete).
+    4. Responsive navigation bar (navbar.html)
+        Navbar berisi link Home, Add Product, Login/Register atau Logout.
+        Pakai Tailwind class (hidden md:flex, tombol hamburger untuk mobile).
+        Jika user login, tampilkan “Welcome, {{ user.username }}” di kanan.
+    5. Testing dan deployment
+        Jalankan di lokal pakai python manage.py runserver.
+        Cek fitur add, edit, delete, login, register, navbar di mobile/desktop.
+        Push ke GitHub & PWS dengan git add ., git commit -m, git push origin main, dan git push pws main:master.

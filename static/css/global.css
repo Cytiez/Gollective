@@ -1,0 +1,15 @@
+.form-style form input,
+.form-style form textarea,
+.form-style form select {
+  width: 100%;
+  padding: 0.5rem;
+  border: 2px solid #d1d5db;
+  border-radius: 0.5rem;
+}
+.form-style form input:focus,
+.form-style form textarea:focus,
+.form-style form select:focus {
+  outline: none;
+  border-color: #111827;
+  box-shadow: 0 0 0 3px rgba(17, 24, 39, 0.1);
+}

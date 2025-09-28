@@ -1,23 +1,36 @@
 {% extends 'base.html' %}
 {% block content %}
-<p><a href="{% url 'main:show_main' %}"><button>← Back to List</button></a></p>
+<a href="{% url 'main:show_main' %}" class="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900">← Back to List</a>
+<section class="mt-4 grid gap-8 lg:grid-cols-2">
+  <div class="rounded-2xl overflow-hidden bg-white border border-gray-200">
+    {% if product.thumbnail %}
+      <img src="{{ product.thumbnail }}" alt="{{ product.name }}" class="w-full h-auto object-cover">
+    {% else %}
+      <div class="aspect-[4/3] grid place-items-center text-gray-400">No Image</div>
+    {% endif %}
+  </div>
+  <div>
+    <h1 class="text-3xl font-semibold">{{ product.name }}</h1>
+    <p class="text-gray-500">{{ product.club_name }} {{ product.season }}</p>
+    <div class="mt-3">
+      <span class="inline-flex items-center rounded-full bg-gray-100 px-3 py-1 text-sm">
+        {{ product.get_category_display }}
+      </span>
+    </div>
+    <div class="mt-4 text-xl font-semibold">Rp {{ product.price }}</div>
+    <ul class="mt-4 text-sm text-gray-600 space-y-1">
+      <li><b>Release Year:</b> {{ product.release_year|default:"-" }}</li>
+      <li><b>Condition:</b> {{ product.condition }}</li>
+      <li><b>Authenticity:</b> {{ product.authenticity|yesno:"Authentic,Replica" }}</li>
+    </ul>
+    <p class="mt-6 leading-relaxed">{{ product.description }}</p>
 
-<h1>{{ product.name }}</h1>
-<p><b>{{ product.get_category_display }}</b>
-   {% if product.is_featured %}| <b>Featured</b>{% endif %}</p>
-
-{% if product.thumbnail %}
-  <img src="{{ product.thumbnail }}" alt="thumbnail" width="300"><br><br>
-{% endif %}
-
-<ul>
-  <li>Club: {{ product.club_name }}</li>
-  <li>Season: {{ product.season }}</li>
-  <li>Release Year: {{ product.release_year }}</li>
-  <li>Condition: {{ product.condition }}</li>
-  <li>Authenticity: {{ product.authenticity|yesno:"Authentic,Replica" }}</li>
-  <li>Price: {{ product.price }}</li>
-</ul>
-
-<p>{{ product.description }}</p>
+    {% if user.is_authenticated and product.user == user %}
+    <div class="mt-6 flex gap-2">
+      <a href="{% url 'main:edit_product' product.id %}" class="px-3 py-2 rounded-lg border border-gray-300 hover:bg-gray-50 text-sm">Edit</a>
+      <a href="{% url 'main:delete_product' product.id %}" class="px-3 py-2 rounded-lg border border-red-300 hover:bg-red-50 text-red-600 text-sm">Delete</a>
+    </div>
+    {% endif %}
+  </div>
+</section>
 {% endblock content %}
