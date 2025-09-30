@@ -7,6 +7,11 @@ class Product(models.Model):
         ('away', 'Away Jersey'),
         ('third', 'Third Jersey'),
     ]
+    
+    CONDITION_CHOICES = {
+        ('mint', 'Mint'),
+        ('second', 'Second'),
+    }
 
     name = models.CharField(max_length=255)
     price = models.IntegerField()
@@ -19,7 +24,7 @@ class Product(models.Model):
     club_name = models.CharField(max_length=100, blank=True)
     season = models.CharField(max_length=20, blank=True)
     release_year = models.IntegerField(blank=True, null=True)
-    condition = models.CharField(max_length=50, default="Mint")
+    condition = models.CharField(max_length=50, choices=CONDITION_CHOICES, default="Mint")
     authenticity = models.BooleanField(default=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True)
 
