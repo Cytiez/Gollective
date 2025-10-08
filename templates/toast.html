@@ -1,0 +1,12 @@
+{% load static %}
+<div 
+  class="fixed bottom-8 right-8 p-4 px-6 rounded-xl shadow-xl z-50 opacity-0 transition-all duration-300 translate-y-10 flex items-start gap-3 bg-white border"
+  id="toast-component"
+>
+  <span id="toast-icon" class="text-2xl">🔔</span>
+  <div>
+    <h3 class="font-bold" id="toast-title">Sample Title</h3>
+    <p class="text-gray-700 text-sm line-clamp-3" id="toast-message">Sample Message</p>
+  </div>
+</div>
+<script src="{% static 'js/toast.js' %}"></script>

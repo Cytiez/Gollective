@@ -3,7 +3,7 @@
 <h1>Login</h1>
 
 <div class="form-style" style="max-width:28rem;">
-  <form method="POST">
+  <form id="loginForm" method="POST" action="{% url 'main:login' %}">
     {% csrf_token %}
     <table>
       {{ form.as_table }}
@@ -17,4 +17,32 @@
     <a href="{% url 'main:register' %}">Register Now</a>
   </p>
 </div>
+
+<script>
+  document.getElementById('loginForm').addEventListener('submit', async function(e){
+    e.preventDefault();
+    const formData = new FormData(this);
+    try {
+      const res = await fetch(this.action, {
+        method: 'POST',
+        headers: {
+          'X-Requested-With': 'XMLHttpRequest',
+          'X-CSRFToken': window.CSRF_TOKEN,
+          'Accept': 'application/json'
+        },
+        body: formData
+      });
+      const data = await res.json();
+      if (data.success) {
+        showToast('Welcome back!', '', 'success');
+        setTimeout(()=> location.href = data.redirect, 500);
+      } else {
+        const first = Object.values(data.errors || {})[0]?.[0] || 'Invalid credentials';
+        showToast('Login failed', first, 'error');
+      }
+    } catch {
+      showToast('Network Error', 'Please try again.', 'error');
+    }
+  });
+</script>
 {% endblock %}

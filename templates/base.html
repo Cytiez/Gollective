@@ -2,6 +2,11 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
+    <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Tambahkan DOMPurify untuk sanitasi HTML -->
+  <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.5/dist/purify.min.js"></script>
+  <link rel="stylesheet" href="{% static 'css/global.css' %}" />
+
     {% block meta %}
       <meta charset="UTF-8" />
       <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -18,5 +23,44 @@
   <footer class="mx-auto max-w-6xl px-4 pb-10 text-xs text-gray-500">
     <div class="border-t border-gray-200 pt-6">Gollective — From goals to collectibles</div>
   </footer>
+  {% include 'toast.html' %}
+{% include 'modal.html' %}
+
+<script>
+  // CSRF helper
+  function getCookie(name) {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(';').shift();
+  }
+  window.CSRF_TOKEN = getCookie('csrftoken');
+
+  // Intercept logout link agar AJAX + toast
+  document.addEventListener('click', async (e) => {
+    const a = e.target.closest('a[href$="/logout/"]');
+    if (!a) return;
+    e.preventDefault();
+    try {
+      const res = await fetch(a.getAttribute('href'), {
+        method: 'POST',
+        headers: {
+          'X-Requested-With': 'XMLHttpRequest',
+          'X-CSRFToken': window.CSRF_TOKEN,
+          'Accept': 'application/json'
+        }
+      });
+      const data = await res.json();
+      if (data.success) {
+        showToast('Logged out', 'See you!', 'success');
+        setTimeout(()=> location.href = data.redirect, 600);
+      } else {
+        showToast('Logout failed', 'Please try again.', 'error');
+      }
+    } catch {
+      showToast('Network Error', 'Unable to logout.', 'error');
+    }
+  });
+</script>
+
 </body>
 </html>

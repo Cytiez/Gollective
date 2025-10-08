@@ -5,49 +5,145 @@
 <section class="mb-8 rounded-2xl bg-gray-900 text-white p-6">
   <h1 class="text-3xl font-semibold">Gollective</h1>
   <p class="text-white/70">From goals to collectibles</p>
+
   <div class="mt-6 flex flex-wrap gap-3">
-    <a href="?filter=all" class="px-4 py-2 rounded-lg text-sm {% if request.GET.filter == 'my' %}bg-white text-gray-900{% else %}bg-gray-800{% endif %}">All</a>
-    <a href="?filter=my" class="px-4 py-2 rounded-lg text-sm {% if request.GET.filter == 'my' %}bg-gray-800{% else %}bg-white text-gray-900{% endif %}">My</a>
-    <a href="{% url 'main:add_product' %}" class="px-4 py-2 rounded-lg bg-white text-gray-900 text-sm">+ Add Product</a>
+    <button id="btn-filter-all" class="px-4 py-2 rounded-lg text-sm bg-gray-800 text-white">All</button>
+    <button id="btn-filter-my" class="px-4 py-2 rounded-lg text-sm bg-white text-gray-900">My</button>
+    <button id="btn-create" class="px-4 py-2 rounded-lg bg-white text-gray-900 text-sm">+ Add Product (AJAX)</button>
+    <button id="btn-refresh" class="px-4 py-2 rounded-lg bg-white/10 text-white text-sm border border-white/20 hover:bg-white/20">Refresh</button>
   </div>
 </section>
 
-{% if not products %}
-  <div class="bg-white border border-gray-200 rounded-2xl p-12 text-center">
-    <div class="w-32 h-32 mx-auto mb-4">
-      <img src="{% static 'image/product-not-found.png' %}" alt="No products" class="w-full h-full object-contain">
-    </div>
-    <h3 class="text-lg font-semibold mb-2">Belum ada produk</h3>
-    <p class="text-gray-500 mb-6">Tambah produk pertamamu sekarang.</p>
-    <a href="{% url 'main:add_product' %}" class="inline-flex px-4 py-2 rounded-lg bg-gray-900 text-white">Add Product</a>
-  </div>
-{% else %}
-  <section class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-    {% for p in products %}
-    <article class="group overflow-hidden rounded-2xl bg-white border border-gray-200 shadow-sm hover:shadow-md transition">
-      {% if p.thumbnail %}
-        <div class="aspect-[4/3] overflow-hidden bg-gray-100">
-          <img src="{{ p.thumbnail }}" alt="{{ p.name }}" class="h-full w-full object-cover group-hover:scale-105 transition" />
-        </div>
-      {% endif %}
-      <div class="p-4">
-        <h3 class="font-semibold leading-tight">{{ p.name }}</h3>
-        <p class="text-sm text-gray-500">{{ p.club_name }} {{ p.season }}</p>
-        <p class="mt-2 text-sm text-gray-600 line-clamp-2">{{ p.description }}</p>
-        <div class="mt-3 flex items-center justify-between">
-          <span class="font-semibold">Rp {{ p.price }}</span>
-          <a href="{% url 'main:show_product' p.id %}" class="text-sm px-3 py-1.5 rounded-lg border border-gray-300 hover:bg-gray-50">Detail</a>
-        </div>
+<!-- Loading -->
+<div id="loading" class="bg-white border border-gray-200 rounded-2xl p-12 text-center hidden">
+  <svg class="animate-spin h-8 w-8 text-gray-900 inline-block" viewBox="0 0 24 24">
+    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+  </svg>
+  <p class="text-gray-600 mt-3">Loading products...</p>
+</div>
 
-        {% if user.is_authenticated and p.user == user %}
-        <div class="mt-3 flex items-center gap-2">
-          <a href="{% url 'main:edit_product' p.id %}" class="text-sm px-3 py-1.5 rounded-lg border border-gray-300 hover:bg-gray-50">Edit</a>
-          <a href="{% url 'main:delete_product' p.id %}" class="text-sm px-3 py-1.5 rounded-lg border border-red-300 text-red-600 hover:bg-red-50">Delete</a>
+<!-- Error -->
+<div id="error" class="hidden bg-white border border-red-200 rounded-2xl p-6 text-red-700"></div>
+
+<!-- Grid -->
+<section id="grid" class="hidden grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"></section>
+
+<!-- Empty -->
+<div id="empty" class="bg-white border border-gray-200 rounded-2xl p-12 text-center hidden">
+  <div class="w-32 h-32 mx-auto mb-4">
+    <img src="{% static 'image/product-not-found.png' %}" alt="No products" class="w-full h-full object-contain">
+  </div>
+  <h3 class="text-lg font-semibold mb-2">Belum ada produk</h3>
+  <p class="text-gray-500 mb-6">Tambah produk pertamamu sekarang.</p>
+  <button id="btn-create-empty" class="inline-flex px-4 py-2 rounded-lg bg-gray-900 text-white">Add Product</button>
+</div>
+
+<script>
+  const CURRENT_USER_ID = "{{ current_user_id|default_if_none:'' }}";
+  const LIST_ENDPOINT = `{% url 'main:show_json' %}`;
+  const DETAIL_URL = (id) => `{% url 'main:show_product' 0 %}`.replace('/0/', `/${id}/`);
+
+  const loading = document.getElementById('loading');
+  const errorBox = document.getElementById('error');
+  const emptyBox = document.getElementById('empty');
+  const grid = document.getElementById('grid');
+
+  let filterMode = 'all';
+  let cached = [];
+
+  function setSection({showLoading=false, showError=false, showEmpty=false, showGrid=false}) {
+    loading.classList.toggle('hidden', !showLoading);
+    errorBox.classList.toggle('hidden', !showError);
+    emptyBox.classList.toggle('hidden', !showEmpty);
+    grid.classList.toggle('hidden', !showGrid);
+  }
+
+  function categoryLabel(code) {
+    const map = {home:'Home Jersey', away:'Away Jersey', third:'Third Jersey'};
+    return map[code] || code;
+  }
+
+  function buildCard(item) {
+    const canEdit = CURRENT_USER_ID && Number(CURRENT_USER_ID) === Number(item.user_id);
+    const card = document.createElement('article');
+    card.className = 'group overflow-hidden rounded-2xl bg-white border border-gray-200 shadow-sm hover:shadow-md transition flex flex-col';
+
+    const thumb = item.thumbnail 
+      ? `<img src="${DOMPurify.sanitize(item.thumbnail)}" alt="${DOMPurify.sanitize(item.name)}" class="h-full w-full object-cover group-hover:scale-105 transition">`
+      : `<div class="h-full w-full bg-gray-100 grid place-items-center text-gray-400">No Image</div>`;
+
+    card.innerHTML = `
+      <div class="aspect-[4/3] overflow-hidden">${thumb}</div>
+      <div class="p-4 flex-1 flex flex-col">
+        <h3 class="font-semibold leading-tight">${DOMPurify.sanitize(item.name)}</h3>
+        <p class="text-sm text-gray-500">${DOMPurify.sanitize(item.club_name || '')} ${DOMPurify.sanitize(item.season || '')}</p>
+        <p class="mt-2 text-sm text-gray-600 line-clamp-2">${DOMPurify.sanitize(item.description || '')}</p>
+        <div class="mt-3 flex items-center justify-between">
+          <span class="font-semibold">Rp ${DOMPurify.sanitize(String(item.price))}</span>
+          <a href="${DETAIL_URL(item.id)}" class="text-sm px-3 py-1.5 rounded-lg border border-gray-300 hover:bg-gray-50">Detail</a>
         </div>
-        {% endif %}
+        <div class="mt-3 flex items-center justify-between">
+          <span class="inline-flex items-center rounded-full bg-gray-100 px-3 py-1 text-xs">${DOMPurify.sanitize(categoryLabel(item.category))}</span>
+          ${canEdit ? `
+            <div class="flex items-center gap-2">
+              <button data-edit="${item.id}" class="text-sm px-3 py-1.5 rounded-lg border border-gray-300 hover:bg-gray-50">Edit</button>
+              <button data-del="${item.id}" class="text-sm px-3 py-1.5 rounded-lg border border-red-300 text-red-600 hover:bg-red-50">Delete</button>
+            </div>` : ``}
+        </div>
       </div>
-    </article>
-    {% endfor %}
-  </section>
-{% endif %}
+    `;
+
+    // Bind Edit/Delete
+    if (canEdit) {
+      card.querySelector('[data-edit]')?.addEventListener('click', () => showModal('edit', item));
+      card.querySelector('[data-del]')?.addEventListener('click', () => showConfirmDelete(item.id));
+    }
+    return card;
+  }
+
+  function render() {
+    const data = filterMode === 'all' ? cached : cached.filter(p => Number(p.user_id) === Number(CURRENT_USER_ID));
+    if (!data.length) {
+      setSection({showEmpty:true});
+      return;
+    }
+    grid.innerHTML = '';
+    data.forEach(item => grid.appendChild(buildCard(item)));
+    setSection({showGrid:true});
+  }
+
+  async function fetchProducts() {
+    try {
+      setSection({showLoading:true});
+      const url = LIST_ENDPOINT + (filterMode === 'my' ? '?filter=my' : '');
+      const res = await fetch(url, { headers: { 'Accept': 'application/json' }});
+      if (!res.ok) throw new Error('Failed to load data');
+      cached = await res.json();
+      render();
+    } catch (err) {
+      errorBox.textContent = 'Error loading products. Please try again later.';
+      setSection({showError:true});
+    }
+  }
+
+  // Buttons
+  document.getElementById('btn-filter-all').addEventListener('click', () => {
+    filterMode = 'all';
+    fetchProducts();
+  });
+  document.getElementById('btn-filter-my').addEventListener('click', () => {
+    filterMode = 'my';
+    fetchProducts();
+  });
+  document.getElementById('btn-refresh').addEventListener('click', () => fetchProducts());
+  document.getElementById('btn-create').addEventListener('click', () => showModal('create'));
+  document.getElementById('btn-create-empty').addEventListener('click', () => showModal('create'));
+
+  // Listen event dari modal
+  document.addEventListener('productsChanged', fetchProducts);
+
+  // Init
+  fetchProducts();
+</script>
 {% endblock content %}
