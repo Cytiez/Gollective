@@ -228,3 +228,70 @@ Step by step implementasi checkpoint
         Jalankan di lokal pakai python manage.py runserver.
         Cek fitur add, edit, delete, login, register, navbar di mobile/desktop.
         Push ke GitHub & PWS dengan git add ., git commit -m, git push origin main, dan git push pws main:master.
+
+##TUGAS6##
+Apa perbedaan antara synchronous request dan asynchronous request?
+    - Synchronous: browser menunggu respons dari server sebelum bisa lanjut. Ui terasa seperti berhenti sampai request selesai. Alur ini sederhana tapi membuat interaksi terasa lambat jika respons lama. Renderin halaman biasanya dilakukan oenuh ulang oleh server sehingga bandwidth dan waktu muat lebih besar.
+
+    - Asynchronous (AJAX): request berjalan di belakang layar sementara UI tetap responsif, hanya bagian tertentu terlihat oleh pengguna dan memungkinkan feedback instan (toast, skeleton, dsb). Dengan asynchronous request pegalaman terasa lebih cepat dan hemat resource karena tidak perlu full reload.
+
+Bagaimana AJAX bekerja di Django(alur request-response)?
+    Event di sisi klien memicu JavaScript memanggil fetch() ke URL Django. Request menyertakan CSRF Token pada header untuk keamanan.
+    View Django memproses data lalu mengembalikan JsonResponse yang berisi status, pesan, dan atau data. Jika terjadi error, view mengirim status HTTP sesua dan struktur error.
+    JavaScript menerima JSON, lalu memanipulasi DOM: menampilkan loading atau error, memperbarui grid produk, menutup modal, dan memunculkan toast. Alur ini membuat halaman tidak perlu dirender ulang secara penuh oleh server.
+
+Apa keuntungan menggunakan AJAX dibandingkan render biasa di Django?
+    Ux lebih mulus: partial update tanpa reload halaman, respons terasa instan.
+    Efisiensi: mengurangi transfer HRML besar-besaran, cukup kirim data mentah (JSON) dan render di klien.
+    Modular dan Reusable: endpoint JSON yang sama dapat dipakai aplikasi lain (mobile/SPA) dan memudahkan pemisahan concern.
+    Kontrol state di klien: loading/empy/error bisa ditangani konsisten oleh JS, termasuk animasi dan notifikasi.
+
+Bagaimana cara memastikan keamanan saat menggunakan AJAX untuk fitur login dan register di Django?
+    CSRF protection: sertakan header X-CSRFToken pada setiap request POST, Django akan memverifikasi token.
+    Server-side validation: tetap gunakan AuthenticationForm/UserCreationForm agar validasi kredensial dan aturan password mengikuti standar Django.
+    Sanitasi input dan output: gunakan strip_tags pada field teks sensitif di server, dunakan DOMPurify ketika menyuntikan konten dinamis ke DOM untuk mencegah XSS
+    Session dan Cookie yang aman : pastikan SESSION_COOKIE_HTTPONLY=True, SECURE_* flags saat production (HTTPS), dan batasi informasi error agar tidak membocorkan detail sensitif.
+
+Bagaimana AJAX mempengaruhi pengalaman pengguna pada website?
+    Pengguna mendapat feedback cepat melalui loading indicator, toast sukses/gagal, dan update data real-time tanpa berpindah halaman.
+    Interaksi terasa ringan, karena hanya komponen yang relevan yang berubah, bukan seluruh halaman.
+    Kontinuitas konteks terjaga: modal form muncul di tempat, data kembali ke posisi semula, dan pengguna tidak “kehilangan” state akibat reload.
+    Secara keseluruhan, hal ini meningkatkan kepuasan pengguna, menurunkan friksi, dan membuat alur kerja lebih efisien.
+
+Implementasi Checlist:
+    1. Mengubah fitur sebelumnya menjadi AJAX
+        Membuat endpoint JSON untuk list dan detail product (/json/ dan /json/<id>/) yang dipakai fetch() di frontend.
+
+        Semua aksi Create/Read/Update/Delete product dipindah ke request AJAX (tanpa full page reload) dan response-nya JsonResponse.
+
+        State UI (Loading/Empty/Error) diatur murni lewat JavaScript agar pengalaman pengguna tetap mulus.
+
+    2. CRUD Product via AJAX dan tampilan baru
+        Menambahkan modal Create dan modal Update (form yang sama, switch mode).
+
+        Menambahkan modal konfirmasi Delete sebelum menghapus.
+
+        Setelah aksi dari modal (create/update/delete) selesai, list product di-refresh via JS tanpa reload halaman.
+
+    3. Tombol resfresh dan filter
+        Menambahkan tombol Refresh untuk mengambil ulang list product terbaru via AJAX.
+
+        Menambahkan filter All dan My product (menggunakan query ?filter=my di endpoint JSON).
+
+    4. Toast
+        Menampilkan toast pada event: create, update, delete product serta login, register, logout (desain dan wording tidak sama persis dengan tutorial).
+    
+    5. Login dan Register via AJAX
+        Submit form login/register dengan fetch() → server balas JSON (success/redirect/error).
+
+        Menampilkan error validasi form langsung di toast, lalu redirect jika berhasil.
+
+    6. Keamanan
+        Server: sanitasi input kritikal pakai strip_tags (defense-in-depth), validasi numerik, dan pembatasan akses pakai @login_required.
+
+        Client: menyertakan CSRF token di header X-CSRFToken untuk semua POST AJAX.
+
+        Frontend: memakai DOMPurify saat menyuntikkan string ke DOM untuk mencegah XSS pada data lama/eksternal.
+    
+    7. Testing, deploy
+        Terakhir saya melakukan testing di lokal terlebih dahulu, jika tidak ada masalah deploy ke pws.
