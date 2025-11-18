@@ -4,6 +4,8 @@ from .views import (
     show_xml, show_json, show_json_by_id,
     register, login_user, logout_user,
     add_product_ajax, update_product_ajax, delete_product_ajax,
+    add_product_flutter,
+    proxy_image,
 )
 
 app_name = "main"
@@ -29,4 +31,9 @@ urlpatterns = [
     path('product/create-ajax/', add_product_ajax, name='add_product_ajax'),
     path('product/<int:id>/update-ajax/', update_product_ajax, name='update_product_ajax'),
     path('product/<int:id>/delete-ajax/', delete_product_ajax, name='delete_product_ajax'),
+
+    # Flutter endpoint
+    path('product/add-flutter/', add_product_flutter, name='add_product_flutter'),
+
+    path('proxy-image/', proxy_image, name='proxy_image'),
 ]

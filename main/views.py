@@ -7,12 +7,13 @@ from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
 from django.urls import reverse
 from django.views.decorators.http import require_POST
+from django.views.decorators.csrf import csrf_exempt
 from django.utils.html import strip_tags
 import datetime
-
+import json
+import requests
 from .models import Product
 from .forms import ProductForm
-
 
 def _is_ajax(request):
     return request.headers.get('x-requested-with') == 'XMLHttpRequest' or \
@@ -53,12 +54,17 @@ def show_main(request):
 @login_required(login_url='/login')
 def show_json(request):
     filter_type = request.GET.get('filter', 'all')
-    qs = Product.objects.all() if filter_type != 'my' else Product.objects.filter(user=request.user)
+    if filter_type == 'my':
+        qs = Product.objects.filter(user=request.user)
+    elif filter_type == 'mahal':
+        qs = Product.objects.filter(price__gt = 1000000)
+    else:
+        qs = Product.objects.all()
     data = [_product_to_dict(p) for p in qs.order_by('-id')]
     return JsonResponse(data, safe=False)
 
 @login_required(login_url='/login')
-def show_json_by_id(request, id: int):
+def show_json_by_id(request, id: int):      
     p = get_object_or_404(Product, pk=id)
     return JsonResponse(_product_to_dict(p))
 
@@ -233,3 +239,77 @@ def logout_user(request):
     response = HttpResponseRedirect(reverse('main:login'))
     response.delete_cookie('last_login')
     return response
+
+def proxy_image(request):
+    image_url = request.GET.get('url')
+    if not image_url:
+        return HttpResponse('No URL provided', status=400)
+    
+    try:
+        # Fetch image from external source
+        response = requests.get(image_url, timeout=10)
+        response.raise_for_status()
+        
+        # Return the image with proper content type
+        return HttpResponse(
+            response.content,
+            content_type=response.headers.get('Content-Type', 'image/jpeg')
+        )
+    except requests.RequestException as e:
+        return HttpResponse(f'Error fetching image: {str(e)}', status=500)
+    
+@csrf_exempt
+def add_product_flutter(request):
+    """Endpoint untuk Flutter yang membuat Product baru via JSON body."""
+    if request.method != 'POST':
+        return JsonResponse({"status": "error", "message": "Invalid method"}, status=405)
+
+    if not request.user.is_authenticated:
+        return JsonResponse({"status": "error", "message": "Unauthorized"}, status=401)
+
+    try:
+        data = json.loads(request.body or "{}")
+    except json.JSONDecodeError:
+        return JsonResponse({"status": "error", "message": "Invalid JSON"}, status=400)
+
+    name = strip_tags((data.get("name") or "").strip())
+    description = strip_tags((data.get("description") or "").strip())
+    thumbnail = strip_tags((data.get("thumbnail") or "").strip())
+    category = strip_tags(data.get("category") or "home")
+    club_name = strip_tags((data.get("club_name") or "").strip())
+    season = strip_tags((data.get("season") or "").strip())
+    condition = strip_tags(data.get("condition") or "mint")
+    is_featured = bool(data.get("is_featured", False))
+    authenticity = bool(data.get("authenticity", True))
+
+    try:
+        price = int(data.get("price") or 0)
+    except (TypeError, ValueError):
+        return JsonResponse({"status": "error", "message": "Price must be an integer."}, status=400)
+
+    release_year = None
+    if data.get("release_year") not in (None, ""):
+        try:
+            release_year = int(data.get("release_year"))
+        except (TypeError, ValueError):
+            return JsonResponse({"status": "error", "message": "Release year must be a number."}, status=400)
+
+    if not name:
+        return JsonResponse({"status": "error", "message": "Name is required."}, status=400)
+
+    product = Product.objects.create(
+        name=name,
+        price=price,
+        description=description,
+        thumbnail=thumbnail,
+        category=category,
+        is_featured=is_featured,
+        club_name=club_name,
+        season=season,
+        release_year=release_year,
+        condition=condition,
+        authenticity=authenticity,
+        user=request.user,
+    )
+
+    return JsonResponse({"status": "success", "data": _product_to_dict(product)}, status=201)
